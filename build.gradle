@@ -24,11 +24,11 @@ dependencies {
     // Spring
     implementation "org.springframework:spring-webmvc:${springVersion}"
 
-    // Spring Data JDBC
+    // Database
     implementation "org.springframework.data:spring-data-jdbc:${springDataVersion}"
-
-    // Database Connection Pool
     implementation 'com.zaxxer:HikariCP:5.1.0'
+    implementation 'org.postgresql:postgresql:42.7.2'
+    implementation 'org.flywaydb:flyway-core:9.21.1'
 
     // Testing
     testImplementation "org.springframework:spring-test:${springVersion}"

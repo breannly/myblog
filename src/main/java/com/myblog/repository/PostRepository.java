@@ -1,6 +1,6 @@
 package com.myblog.repository;
 
-import com.myblog.entity.Post;
+import com.myblog.domain.entity.Post;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

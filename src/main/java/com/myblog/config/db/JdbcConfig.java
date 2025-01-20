@@ -15,7 +15,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import javax.sql.DataSource;
 
 @Configuration
-@EnableJdbcRepositories
+@EnableJdbcRepositories(basePackages = "com.myblog.repository")
 public class JdbcConfig extends AbstractJdbcConfiguration {
 
     @Value(value = "${db.url}")

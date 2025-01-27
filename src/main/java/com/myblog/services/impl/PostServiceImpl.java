@@ -1,15 +1,21 @@
 package com.myblog.services.impl;
 
+import com.myblog.entities.Comment;
 import com.myblog.entities.Post;
-import com.myblog.exceptions.PostNotFoundException;
+import com.myblog.exceptions.EntityNotFoundException;
 import com.myblog.exceptions.PostServiceException;
+import com.myblog.repositories.CommentRepository;
 import com.myblog.repositories.PostRepository;
 import com.myblog.services.PostService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -19,17 +25,16 @@ public class PostServiceImpl implements PostService {
     private static final Logger logger = LoggerFactory.getLogger(PostServiceImpl.class);
 
     private final PostRepository postRepository;
+    private final CommentRepository commentRepository;
 
-    public PostServiceImpl(PostRepository postRepository) {
+    public PostServiceImpl(PostRepository postRepository,
+                           CommentRepository commentRepository) {
         this.postRepository = postRepository;
+        this.commentRepository = commentRepository;
     }
 
     @Override
     public Post create(Post post) {
-        if (post == null) {
-            throw new IllegalArgumentException("Post cannot be null");
-        }
-
         logger.debug("Attempting to create post: {}", post);
         try {
             Post savedPost = postRepository.save(post);
@@ -43,13 +48,9 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public Post update(Long id, Post post) {
-        if (post == null) {
-            throw new IllegalArgumentException("Post cannot be null");
-        }
-
         logger.debug("Attempting to update post with id: {}", id);
         Post foundPost = postRepository.findById(id)
-            .orElseThrow(() -> new PostNotFoundException("Post not found with id: " + id));
+            .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + id));
 
         try {
             Post enrichedPost = enrichPost(post, foundPost);
@@ -64,13 +65,9 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void incrementLikes(Long id) {
-        if (id == null) {
-            throw new IllegalArgumentException("Id cannot be null");
-        }
-
         logger.debug("Attempting to increment likes for post with id: {}", id);
         Post post = postRepository.findById(id)
-            .orElseThrow(() -> new PostNotFoundException("Post not found with id: " + id));
+            .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + id));
 
         try {
             postRepository.save(post.incrementLikes());
@@ -83,16 +80,18 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public Post findById(Long id) {
-        if (id == null) {
-            throw new IllegalArgumentException("Id cannot be null");
-        }
-
         logger.debug("Searching for post with id: {}", id);
-        return postRepository.findById(id)
+        Post post = postRepository.findById(id)
             .orElseThrow(() -> {
                 logger.warn("Post not found with id: {}", id);
-                return new PostNotFoundException("Post not found with id: " + id);
+                return new EntityNotFoundException("Post not found with id: " + id);
             });
+
+        List<Comment> comments = commentRepository.findAllByPostId(post.getId()).stream()
+            .sorted(Comparator.comparing(Comment::getCreatedAt).reversed())
+            .collect(Collectors.toList());
+        post.setComments(comments);
+        return post;
     }
 
     @Override
@@ -102,7 +101,22 @@ public class PostServiceImpl implements PostService {
             List<Post> posts = StreamSupport
                 .stream(postRepository.findAll().spliterator(), false)
                 .collect(Collectors.toList());
-            logger.info("Successfully retrieved {} posts", posts.size());
+
+            Set<Long> postIds = posts.stream()
+                .map(Post::getId)
+                .collect(Collectors.toSet());
+
+            List<Comment> comments = commentRepository.findAllByPostIdIn(postIds);
+
+            Map<Long, List<Comment>> commentsByPostId = comments.stream()
+                .collect(Collectors.groupingBy(Comment::getPostId));
+            commentsByPostId.forEach((postId, commentList) ->
+                commentList.sort(Comparator.comparing(Comment::getCreatedAt).reversed()));
+
+            posts.forEach(post ->
+                post.setComments(commentsByPostId.getOrDefault(post.getId(), Collections.emptyList())));
+
+            logger.info("Successfully retrieved {} posts with {} comments", posts.size(), comments.size());
             return posts;
         } catch (Exception e) {
             logger.error("Failed to retrieve posts", e);
@@ -112,10 +126,6 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void deleteById(Long id) {
-        if (id == null) {
-            throw new IllegalArgumentException("Id cannot be null");
-        }
-
         logger.debug("Attempting to delete post with id: {}", id);
         validatePostExists(id);
 
@@ -125,18 +135,6 @@ public class PostServiceImpl implements PostService {
         } catch (Exception e) {
             logger.error("Failed to delete post with id: {}", id, e);
             throw new PostServiceException("Failed to delete post", e);
-        }
-    }
-
-    @Override
-    public void deleteAll() {
-        logger.warn("Attempting to delete all posts");
-        try {
-            postRepository.deleteAll();
-            logger.info("Successfully deleted all posts");
-        } catch (Exception e) {
-            logger.error("Failed to delete all posts", e);
-            throw new PostServiceException("Failed to delete all posts", e);
         }
     }
 
@@ -157,7 +155,7 @@ public class PostServiceImpl implements PostService {
     private void validatePostExists(Long id) {
         if (!postRepository.existsById(id)) {
             logger.warn("Post not found with id: {}", id);
-            throw new PostNotFoundException("Post not found with id: " + id);
+            throw new EntityNotFoundException("Post not found with id: " + id);
         }
     }
 }

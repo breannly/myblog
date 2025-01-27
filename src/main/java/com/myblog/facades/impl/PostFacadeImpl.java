@@ -66,9 +66,4 @@ public class PostFacadeImpl implements PostFacade {
         logger.debug("Deleting post by id: {}", id);
         postService.deleteById(id);
     }
-
-    public void deleteAll() {
-        logger.debug("Deleting all posts");
-        postService.deleteAll();
-    }
 }

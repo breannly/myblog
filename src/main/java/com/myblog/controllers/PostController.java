@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -33,9 +34,14 @@ public class PostController {
     }
 
     @GetMapping("/{id}")
-    public String getPost(@PathVariable("id") Long id, Model model) {
+    public String getPost(@PathVariable("id") Long id,
+                          @RequestParam(value = "editCommentId", required = false) Long editCommentId,
+                          Model model) {
         PostResponse post = postFacade.findById(id);
         model.addAttribute("post", post);
+        if (editCommentId != null) {
+            model.addAttribute("editCommentId", editCommentId);
+        }
         return "posts/document";
     }
 

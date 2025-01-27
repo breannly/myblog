@@ -1,0 +1,1 @@
+CREATE INDEX comments_post_id_btree_idx ON comments USING btree (post_id);

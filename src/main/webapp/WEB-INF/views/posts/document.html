@@ -34,7 +34,6 @@
             padding: 2rem;
             background-color: #1a237e;
             color: white;
-            position: relative;
         }
 
         .post-header h1 {
@@ -70,11 +69,6 @@
             color: white;
         }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
         .post-content {
             padding: 2rem;
         }
@@ -95,12 +89,12 @@
         }
 
         .meta {
-            background-color: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 12px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 1rem;
+            padding: 1.5rem;
+            background-color: #f8f9fa;
+            border-radius: 12px;
         }
 
         .meta-item {
@@ -108,14 +102,6 @@
             align-items: center;
             gap: 0.5rem;
             color: #666;
-        }
-
-        .meta-item i {
-            color: #1a237e;
-        }
-
-        .likes i {
-            color: #e53e3e;
         }
 
         .like-button {
@@ -126,17 +112,151 @@
             align-items: center;
             gap: 0.5rem;
             color: #666;
-            text-decoration: none;
             transition: all 0.3s ease;
         }
 
         .like-button:hover {
             color: #e53e3e;
-            transform: scale(1.1);
         }
 
-        .like-button.liked {
+        /* Comments Section */
+        .comments-section {
+            padding: 2rem;
+            border-top: 1px solid #eee;
+        }
+
+        .comments-section h2 {
+            font-size: 1.8rem;
+            color: #1a237e;
+            margin-bottom: 1.5rem;
+        }
+
+        .comment-form {
+            margin-bottom: 2rem;
+        }
+
+        .comment-form textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            min-height: 100px;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            resize: vertical;
+        }
+
+        .btn-comment {
+            background-color: #1a237e;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .comments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .comment {
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+
+        .comment-content {
+            font-size: 1.1rem;
+            color: #4a5568;
+            margin-bottom: 1rem;
+        }
+
+        .comment-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .comment-actions form {
+            display: inline;
+        }
+
+        .action-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.4rem;
+            font-size: 0.9rem;
+        }
+
+        .action-button:hover {
+            color: #1a237e;
+        }
+
+        .action-button.delete:hover {
             color: #e53e3e;
+        }
+
+        .edit-form {
+            margin-top: 1rem;
+        }
+
+        .edit-form textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            min-height: 80px;
+            font-size: 1rem;
+        }
+
+        .edit-form-buttons {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .btn-save {
+            background-color: #1a237e;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-cancel {
+            background-color: #666;
+            color: white;
+            text-decoration: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 4px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @media (max-width: 768px) {
@@ -155,16 +275,11 @@
             .meta {
                 grid-template-columns: 1fr;
             }
-        }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+            .comment-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
             }
         }
     </style>
@@ -188,9 +303,9 @@
         <img th:if="${post.imageUrl}" th:src="${post.imageUrl}" alt="Post image" class="post-image"/>
 
         <div class="meta">
-            <div class="meta-item likes">
-                <form th:action="@{/posts/{id}/likes/increment(id=${post.id})}" method="post" style="display: inline;">
-                    <button type="submit" class="like-button" onclick="this.classList.add('liked')">
+            <div class="meta-item">
+                <form th:action="@{/posts/{id}/likes/increment(id=${post.id})}" method="post">
+                    <button type="submit" class="like-button">
                         <i class="fas fa-heart"></i>
                         <span th:text="${post.likesCount}">0</span>
                     </button>
@@ -205,6 +320,52 @@
                 <i class="far fa-calendar-check"></i>
                 Updated:
                 <span th:text="${#temporals.format(post.updatedAt, 'dd MMM yyyy HH:mm')}">Date</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="comments-section">
+        <h2>Comments</h2>
+
+        <form th:action="@{/posts/{id}/comments(id=${post.id})}" method="post" class="comment-form">
+            <textarea name="content" placeholder="Write a comment..." required></textarea>
+            <button type="submit" class="btn-comment">Post Comment</button>
+        </form>
+
+        <div class="comments-list">
+            <div th:each="comment : ${post.comments}" class="comment">
+                <div th:if="${editCommentId != comment.id}">
+                    <div class="comment-content" th:text="${comment.content}">Comment text</div>
+                    <div class="comment-meta">
+                        <span class="comment-date"
+                              th:text="${#temporals.format(comment.createdAt, 'dd MMM yyyy HH:mm')}">Date</span>
+                        <div class="comment-actions">
+                            <form th:action="@{/posts/{postId}/comments/{commentId}/edit(postId=${post.id},commentId=${comment.id})}"
+                                  method="get">
+                                <button type="submit" class="action-button">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                            </form>
+                            <form th:action="@{/posts/{postId}/comments/{commentId}/delete(postId=${post.id},commentId=${comment.id})}"
+                                  method="post">
+                                <button type="submit" class="action-button delete">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${editCommentId == comment.id}" class="edit-form">
+                    <form th:action="@{/posts/{postId}/comments/{commentId}/edit(postId=${post.id},commentId=${comment.id})}"
+                          method="post">
+                        <textarea name="content" th:text="${comment.content}" required></textarea>
+                        <div class="edit-form-buttons">
+                            <button type="submit" class="btn-save">Save</button>
+                            <a th:href="@{/posts/{id}(id=${post.id})}" class="btn-cancel">Cancel</a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

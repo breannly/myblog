@@ -1,0 +1,9 @@
+CREATE TABLE comments
+(
+    id         BIGSERIAL PRIMARY KEY,
+    post_id    BIGINT NOT NULL,
+    content    TEXT   NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE
+);

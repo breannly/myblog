@@ -19,6 +19,4 @@ public interface PostFacade {
     List<PostResponse> findAll();
 
     void deleteById(Long id);
-
-    void deleteAll();
 }

@@ -1,28 +1,20 @@
 package com.myblog.entities;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
-@Table("posts")
-public class Post implements Persistable<Long> {
+@Table("comments")
+public class Comment implements Persistable<Long> {
 
     @Id
     private Long id;
-    private String title;
+    @Column("post_id")
+    private Long postId;
     private String content;
-    @Column(value = "image_url")
-    private String imageUrl;
-    @Column(value = "likes_count")
-    private Integer likesCount = 0;
-    @Transient
-    private List<Comment> comments = new ArrayList<>();
     @Column("created_at")
     private Instant createdAt;
     @Column("updated_at")
@@ -38,21 +30,16 @@ public class Post implements Persistable<Long> {
         return id == null;
     }
 
-    public Post incrementLikes() {
-        likesCount++;
-        return this;
-    }
-
     public void setId(Long id) {
         this.id = id;
     }
 
-    public String getTitle() {
-        return title;
+    public Long getPostId() {
+        return postId;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setPostId(Long postId) {
+        this.postId = postId;
     }
 
     public String getContent() {
@@ -61,30 +48,6 @@ public class Post implements Persistable<Long> {
 
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    public Integer getLikesCount() {
-        return likesCount;
-    }
-
-    public void setLikesCount(Integer likesCount) {
-        this.likesCount = likesCount;
-    }
-
-    public List<Comment> getComments() {
-        return comments;
-    }
-
-    public void setComments(List<Comment> comments) {
-        this.comments = comments;
     }
 
     public Instant getCreatedAt() {
